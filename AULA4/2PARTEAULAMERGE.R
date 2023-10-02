@@ -17,9 +17,11 @@ departamentos <- data.frame(
   NomeDepartamento = c("Vendas", "TI", "RH")
 )
 
+colnames(departamentos)
 # Realizar o INNER JOIN entre as tabelas 
 resultado <- merge(funcionarios, departamentos, 
-                   by = "IDDepartamento", all = FALSE)
+                   by= "IDDepartamento", all = F)
+
 
 # Exibir o resultado
 print(result)
@@ -29,8 +31,9 @@ print(result)
 library(dplyr)
 
 # Realizar o INNER JOIN entre as tabelas funcionarios e departamentos
-resultado2 <- funcionarios %>%
-  inner_join(departamentos, by = "IDDepartamento")
+resultado2 <- funcionarios %>% 
+  inner_join(departamentos, by= "IDDepartamento")
+
 
 # Exibir o resultado
 print(resultado)
@@ -55,6 +58,7 @@ departamentos <- data.frame(
 # Realizar o LEFT JOIN entre as tabelas funcionarios e departamentos
 resultado3 <- merge(funcionarios, departamentos, all.x = TRUE)
 
+
 # Exibir o resultado
 print(resultado3)
 
@@ -62,8 +66,9 @@ print(resultado3)
 library(dplyr)
 
 # Realizar o LEFT JOIN entre as tabelas funcionarios e departamentos
-resultado4 <- funcionarios %>%
-  left_join(departamentos, by = "IDDepartamento")
+resultado4 <- funcionarios %>% 
+  left_join(departamentos, by= "IDDepartamento")
+
 
 #E se as colunas estiverem com nomes diferentes ?
 
@@ -103,18 +108,19 @@ departamentos_right <- data.frame(
 
 # Realizar o RIGHT JOIN entre as tabelas departamentos_right 
 #e funcionarios_right
+
 resultado7 <- merge(departamentos_right, 
-                              funcionarios_right, 
-                              by.x = "IDDepartamento", 
-                              by.y = "IDFuncionario", 
-                              all.x = TRUE)
+                    funcionarios_right,
+                    by.x = "IDDepartamento",
+                    by.y = "IDFuncionario", 
+                    all.x = TRUE)
 
 #Outra forma
 library(dplyr)
 
 resultado8 <- funcionarios_right %>% 
-  right_join(departamentos_right, 
-             by = c("IDFuncionario" = "IDDepartamento"))
+  right_join(departamentos_right,
+             by= c("IDFuncionario" = "IDDepartamento"))
 
 
 #CROSS JOIN####
@@ -172,16 +178,20 @@ eleicoes_2022 <- data.frame(
 )
 
 # Realizar um FULL JOIN entre as bases de dados usando merge()
-Base1 <- merge(eleicoes_2018, eleicoes_2020, all = TRUE)
-Basetotal <- merge(resultado_final, eleicoes_2022,  all = TRUE)
+Bese1 <- merge(eleicoes_2018, eleicoes_2020, all = TRUE)
+Basetotal <- merge(Bese1, eleicoes_2022, all = TRUE)
+
+
 
 # Realizar a junção das bases de dados
 library(dplyr)
 
-Basetotal2 <- full_join(eleicoes_2018,
-                             eleicoes_2020, 
-                             by = NULL) %>%
+Basetotal2 <- full_join(eleicoes_2018, 
+                        eleicoes_2020, 
+                        by= NULL) %>% 
   full_join(eleicoes_2022, by = NULL)
+
+
 
 # mais uma forma 
 Basetotal3 <-   bind_rows (eleicoes_2018, 
@@ -201,6 +211,8 @@ Basetotal4 <- bind_cols(eleicoes_2018,
 #MERGE####
 
 library(readr)
+
+#Votos
 votos_sen <- read_delim("votos_sen.csv", 
                         delim = ";", escape_double = FALSE, 
                         col_types = cols(`Soma de Votos nominais` = col_number()), 
@@ -210,18 +222,66 @@ View(votos_sen)
 
 votos_sen$NOME <-  votos_sen$`Rótulos de Linha`
 
+
+
+#excluir essa coluna renomeada
+votos_sen <- votos_sen[ ,-1]
+
+
+# Retirar acentos e outros caracteres
+# install.packages("stringi")
+ library(stringi)
+
+# 
+
+# Removendo todos os caracteres que não 
+# são letras (maiúsculas ou minúsculas), 
+# números ou espaços. 
+# A expressão regular [^a-zA-Z0-9 ] corresponde 
+# a todos os caracteres que não são letras 
+# (maiúsculas ou minúsculas), números ou espaços 
+# e substitui-os por uma string vazia ""
+# 
+# a opção "ASCII//TRANSLIT" ajuda a substituir 
+# os caracteres 
+# acentuados por suas versões não acentuadas.
+#                     "ASCII//TRANSLIT"
+
+votos_sen$NOME <- gsub("[^a-zA-Z0-9 ]", "", 
+                  iconv(votos_sen$NOME, 
+                        to = "ASCII//TRANSLIT"))
+#candidatos
 cand_sen <- read_delim("cand_sen.csv", delim = ";", 
                        escape_double = FALSE, locale = locale(encoding = "LATIN1"), 
                        trim_ws = TRUE)
 
 
 cand_sen$NOME <- cand_sen$NM_CANDIDATO
+#excluir essa coluna renomeada
+cand_sen <- cand_sen[ , -18]
 
+#remover os acentos...
+cand_sen$NOME <- gsub("[^a-zA-Z0-9 ]", "", 
+                       iconv(cand_sen$NOME, 
+             to = "ASCII//TRANSLIT"))
+
+#receita
 receita_sen <- read_delim("receita_sen.csv", 
-                          delim = ";", escape_double = FALSE, col_types = cols(`Soma de Valor de receita` = col_number()), 
-                          trim_ws = TRUE)
+delim = ";", escape_double = FALSE, #Não usaremos aspasduplas
+locale = locale(decimal_mark = ","), trim_ws = TRUE) #trim_ws 
+#retira os espaços em branco extras ao redor dos valores 
+#serão removidos durante a leitura dos dados. Isso é útil para garantir que não haja espaços em branco indesejados nos dados lidos.
 
 receita_sen$NOME <- receita_sen$`Rótulos de Linha`
+
+#excluir essa coluna renomeada
+receita_sen <- receita_sen[ , -1]
+
+#remover os acentos...
+receita_sen$NOME <- gsub("[^a-zA-Z0-9 ]", "", 
+                      iconv(receita_sen$NOME, 
+                            to = "ASCII//TRANSLIT"))
+
 
 #MERGE
 #POR NOME
@@ -240,6 +300,12 @@ library(writexl)
 writexl::write_xlsx(BaseSenado1, path = "Teste1.xlsx")
 
 writexl::write_xlsx(BaseSenado2, path = "Teste2.xlsx")
+
+#Depois de arrumar verificamos que foram 7 casos
+#com nomes realmente diferentes
+
+# https://sig.tse.jus.br/ords/dwapr/r/seai/sig-candidaturas/cargo?session=9974857748415
+
 #Explicar certinho para os alunos o q acontece quando repete 
 #as colunas, como limpar, como organizar, enfim, para deixar 
 #a base ok para as análises! 
